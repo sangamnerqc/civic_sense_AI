@@ -296,6 +296,7 @@ document.getElementById("rWard").innerHTML =
 
 try { user = JSON.parse(sessionStorage.getItem("cs_user")); } catch(e){}
 if (user) enterApp();
+checkBackend();
 
 /* =========================================================
    HELPERS
@@ -312,16 +313,48 @@ function fmtDate(d){ return new Date(d).toLocaleString("en-IN",{dateStyle:"mediu
 /* =========================================================
    API – Google Apps Script backend (or local demo)
    ========================================================= */
+// Reads the backend reply and turns Google's HTML error pages into clear messages
+async function parseReply(r){
+  const text = await r.text();
+  try { return JSON.parse(text); }
+  catch(e){
+    if (/accounts\.google\.com|ServiceLogin|Sign in/i.test(text))
+      throw new Error("Backend asks for Google sign-in. Redeploy the Apps Script with 'Who has access: Anyone'.");
+    if (/authoriz|permission/i.test(text))
+      throw new Error("Apps Script is not authorized. Open the script, run setup() once and allow access.");
+    if (/not found|unable to open|404/i.test(text))
+      throw new Error("Web App URL is wrong or the deployment was deleted. Copy the latest /exec URL.");
+    throw new Error("Backend did not return JSON (HTTP " + r.status + "). Check the Apps Script deployment.");
+  }
+}
+
 async function api(action, data){
   if (CONFIG.SCRIPT_URL){
     const r = await fetch(CONFIG.SCRIPT_URL, {
       method:"POST",
+      redirect:"follow",
       headers:{"Content-Type":"text/plain;charset=utf-8"}, // avoids CORS preflight
       body: JSON.stringify({action, ...data})
     });
-    return r.json();
+    return parseReply(r);
   }
   return demoApi(action, data);
+}
+
+// Checks on page load that the Google Sheet backend is reachable
+async function checkBackend(){
+  if (!CONFIG.SCRIPT_URL) return;
+  const b = document.getElementById("demoBanner");
+  try{
+    const r = await fetch(CONFIG.SCRIPT_URL + "?action=ping", {redirect:"follow"});
+    const j = await parseReply(r);
+    if (!j.ok) throw new Error(j.error);
+    console.log("Backend OK:", j);
+  }catch(err){
+    b.style.background="#fdecea"; b.style.color="#c0392b";
+    b.innerHTML = "⚠️ Cannot reach Google Sheet: " + err.message;
+    b.classList.remove("hidden");
+  }
 }
 
 function demoApi(action, d){
@@ -370,7 +403,7 @@ async function doRegister(e){
     });
     if(res.ok){ msg("regMsg","Registration successful! Please login.","ok"); $("regForm").reset(); setTimeout(()=>showAuth("login"),1200); }
     else msg("regMsg", res.error);
-  }catch(err){ msg("regMsg","Could not connect to server. "+err.message); }
+  }catch(err){ msg("regMsg","Registration failed: "+err.message); }
   busy(btn,false);
 }
 
@@ -381,7 +414,7 @@ async function doLogin(e){
     const res = await api("login",{ mobile:$("lMobile").value.trim(), passwordHash: await sha256($("lPass").value) });
     if(res.ok){ user=res.user; sessionStorage.setItem("cs_user",JSON.stringify(user)); enterApp(); }
     else msg("loginMsg", res.error);
-  }catch(err){ msg("loginMsg","Could not connect to server. "+err.message); }
+  }catch(err){ msg("loginMsg","Login failed: "+err.message); }
   busy(btn,false);
 }
 
