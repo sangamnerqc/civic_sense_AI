@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Civic Sense AI – Nagarpalika Citizen Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+<style>
+  :root{
+    --primary:#0b5d8f; --primary-dark:#08466b; --accent:#f39c12;
+    --danger:#c0392b; --ok:#1e8449; --bg:#f2f5f8; --card:#ffffff;
+    --text:#1d2733; --muted:#6b7785; --border:#dbe2e9; --radius:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Mukta',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+  button{font-family:inherit;cursor:pointer}
+  .hidden{display:none!important}
+
+  /* Header */
+  header{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:0;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  header .brand{display:flex;align-items:center;gap:10px}
+  header .logo{width:40px;height:40px;border-radius:50%;background:#fff;color:var(--primary);display:grid;place-items:center;font-weight:700;font-size:18px}
+  header h1{font-size:18px;line-height:1.1}
+  header small{font-size:12px;opacity:.85}
+  header .user{font-size:13px;text-align:right}
+  header .user button{margin-top:4px;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:6px;padding:3px 10px;font-size:12px}
+
+  main{max-width:1000px;margin:0 auto;padding:16px}
+
+  .card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:16px}
+  .auth-wrap{max-width:440px;margin:24px auto}
+  .auth-tabs{display:flex;margin-bottom:16px;border-bottom:2px solid var(--border)}
+  .auth-tabs button{flex:1;padding:10px;border:none;background:none;font-size:16px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px}
+  .auth-tabs button.active{color:var(--primary);border-color:var(--primary)}
+
+  label{display:block;font-weight:600;font-size:14px;margin:12px 0 4px}
+  label .mr{font-weight:400;color:var(--muted);font-size:13px}
+  input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:15px;background:#fff}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--primary);border-color:transparent}
+  textarea{min-height:90px;resize:vertical}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:560px){.row{grid-template-columns:1fr}}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 18px;border:none;border-radius:8px;font-size:15px;font-weight:600;background:var(--primary);color:#fff}
+  .btn:hover{background:var(--primary-dark)}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .btn.block{width:100%;margin-top:18px}
+  .btn.secondary{background:#e8eef3;color:var(--primary)}
+  .btn.danger{background:var(--danger)}
+  .btn.ok{background:var(--ok)}
+
+  .msg{padding:10px 12px;border-radius:8px;font-size:14px;margin-top:12px}
+  .msg.err{background:#fdecea;color:var(--danger)}
+  .msg.ok{background:#e8f6ee;color:var(--ok)}
+  .msg.info{background:#eaf3fa;color:var(--primary)}
+
+  /* Tabs */
+  .tabs{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+  .tab{background:var(--card);border:2px solid transparent;border-radius:var(--radius);padding:14px 8px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+  .tab .ic{font-size:28px;display:block}
+  .tab .en{font-weight:700;font-size:14px;display:block;margin-top:4px}
+  .tab .mr{font-size:12px;color:var(--muted)}
+  .tab.active{border-color:var(--primary);background:#eaf3fa}
+  .tab.rk{border-color:#f5c6c0}
+  .tab.rk.active{border-color:var(--danger);background:#fdecea}
+
+  .rakshak{background:#fdecea;border-left:5px solid var(--danger);padding:14px;border-radius:8px;margin-bottom:14px}
+  .rakshak h3{color:var(--danger);font-size:16px;margin-bottom:6px}
+  .rakshak p{font-size:14px;margin-bottom:10px}
+  .rakshak .btns{display:flex;gap:8px;flex-wrap:wrap}
+
+  /* Photo */
+  .photo-box{border:2px dashed var(--border);border-radius:var(--radius);padding:16px;text-align:center;background:#fafcfd}
+  .photo-box img{max-width:100%;border-radius:8px;margin-top:10px}
+  .loc{font-size:13px;color:var(--muted);margin-top:8px}
+  .loc.good{color:var(--ok)}
+
+  /* Complaints list */
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:9px 8px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+  th{background:#f5f8fa;font-size:13px;color:var(--muted)}
+  .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:600}
+  .b-open{background:#fff4e0;color:#b9770e}
+  .b-high{background:#fdecea;color:var(--danger)}
+  .b-done{background:#e8f6ee;color:var(--ok)}
+  .table-wrap{overflow-x:auto}
+
+  .demo-banner{background:#fff4e0;color:#8a5a00;font-size:13px;padding:8px 12px;text-align:center}
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
+  .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div id="demoBanner" class="demo-banner hidden">
+  Demo mode: Google Sheet not connected yet. Data is saved only in this browser. Set <b>SCRIPT_URL</b> in the code to go live.
+</div>
+
+<header>
+  <div class="brand">
+    <div class="logo">CS</div>
+    <div>
+      <h1>Civic Sense AI</h1>
+      <small id="corpName">Nagarpalika</small>
+    </div>
+  </div>
+  <div class="user hidden" id="userBox">
+    <div id="userName"></div>
+    <button onclick="logout()">Logout / बाहेर पडा</button>
+  </div>
+</header>
+
+<main>
+  <!-- ========== AUTH ========== -->
+  <section id="authView" class="auth-wrap">
+    <div class="card">
+      <div class="auth-tabs">
+        <button id="tLogin" class="active" onclick="showAuth('login')">Login / लॉगिन</button>
+        <button id="tReg" onclick="showAuth('register')">Register / नोंदणी</button>
+      </div>
+
+      <form id="loginForm" onsubmit="doLogin(event)">
+        <label>Mobile Number <span class="mr">/ मोबाईल नंबर</span></label>
+        <input id="lMobile" type="tel" maxlength="10" pattern="[6-9][0-9]{9}" required placeholder="10-digit mobile">
+        <label>Password <span class="mr">/ पासवर्ड</span></label>
+        <input id="lPass" type="password" required>
+        <button class="btn block" id="loginBtn">Login</button>
+        <div id="loginMsg"></div>
+      </form>
+
+      <form id="regForm" class="hidden" onsubmit="doRegister(event)">
+        <label>Full Name <span class="mr">/ पूर्ण नाव</span></label>
+        <input id="rName" required>
+        <div class="row">
+          <div>
+            <label>Mobile <span class="mr">/ मोबाईल</span></label>
+            <input id="rMobile" type="tel" maxlength="10" pattern="[6-9][0-9]{9}" required>
+          </div>
+          <div>
+            <label>Ward No. <span class="mr">/ प्रभाग क्र.</span></label>
+            <select id="rWard" required></select>
+          </div>
+        </div>
+        <label>Email <span class="mr">(optional)</span></label>
+        <input id="rEmail" type="email">
+        <label>Residential Address <span class="mr">/ पत्ता</span></label>
+        <textarea id="rAddress" required style="min-height:60px"></textarea>
+        <div class="row">
+          <div>
+            <label>Password</label>
+            <input id="rPass" type="password" minlength="6" required>
+          </div>
+          <div>
+            <label>Confirm Password</label>
+            <input id="rPass2" type="password" minlength="6" required>
+          </div>
+        </div>
+        <button class="btn block" id="regBtn">Register</button>
+        <div id="regMsg"></div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ========== DASHBOARD ========== -->
+  <section id="appView" class="hidden">
+    <div class="tabs" id="tabs"></div>
+
+    <!-- Complaint form -->
+    <div class="card" id="formCard">
+      <h2 id="formTitle" style="font-size:20px"></h2>
+      <p id="formSub" style="color:var(--muted);font-size:14px;margin-bottom:6px"></p>
+
+      <div id="rakshakBox" class="rakshak hidden">
+        <h3>🛡️ Rakshak Dal – Emergency / रक्षक दल</h3>
+        <p>If you are in immediate danger, call first. Your complaint with photo can be submitted after you are safe.</p>
+        <div class="btns">
+          <a class="btn danger" id="rakshakCall" href="#">📞 Call Rakshak Dal</a>
+          <button type="button" class="btn danger" onclick="sendSOS()">🚨 Send SOS with location</button>
+        </div>
+        <div id="sosMsg"></div>
+      </div>
+
+      <form id="complaintForm" onsubmit="submitComplaint(event)">
+        <label id="subLabel">Issue Type <span class="mr">/ समस्येचा प्रकार</span></label>
+        <select id="cSub" required></select>
+
+        <div id="certFields" class="hidden">
+          <div class="row">
+            <div>
+              <label>Applicant Name <span class="mr">/ अर्जदाराचे नाव</span></label>
+              <input id="cApplicant">
+            </div>
+            <div>
+              <label>Purpose <span class="mr">/ उद्देश</span></label>
+              <input id="cPurpose" placeholder="e.g. School admission">
+            </div>
+          </div>
+        </div>
+
+        <div id="priorityField">
+          <label>Urgency <span class="mr">/ तातडी</span></label>
+          <select id="cPriority">
+            <option>Normal</option>
+            <option>High</option>
+            <option>Emergency</option>
+          </select>
+        </div>
+
+        <label>Description <span class="mr">/ तपशील</span></label>
+        <textarea id="cDesc" required placeholder="Describe the issue clearly…"></textarea>
+
+        <label>Landmark / Location <span class="mr">/ खूण किंवा ठिकाण</span></label>
+        <input id="cLandmark" required placeholder="Near…, Road name, Ward">
+
+        <label>Geotagged Photo (required) <span class="mr">/ जिओटॅग फोटो (आवश्यक)</span></label>
+        <div class="photo-box">
+          <input id="cPhoto" type="file" accept="image/*" capture="environment" class="hidden" onchange="handlePhoto(event)">
+          <button type="button" class="btn secondary" onclick="takePhoto()">📷 Take Photo / फोटो काढा</button>
+          <div id="locStatus" class="loc">Location will be captured when you take the photo.</div>
+          <img id="photoPreview" class="hidden" alt="Geotagged photo preview">
+        </div>
+
+        <button class="btn block" id="submitBtn">Submit Complaint & Download Word File</button>
+        <div id="submitMsg"></div>
+      </form>
+    </div>
+
+    <!-- My complaints -->
+    <div class="card hidden" id="listCard">
+      <h2 style="font-size:20px;margin-bottom:10px">My Complaints / माझ्या तक्रारी</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Date</th><th>Category</th><th>Issue</th><th>Status</th></tr></thead>
+        <tbody id="listBody"></tbody>
+      </table></div>
+      <div id="listMsg"></div>
+    </div>
+  </section>
+</main>
+
+<footer>Civic Sense AI · Citizen Grievance Portal</footer>
+
+<script>
+/* =========================================================
+   CONFIGURATION – edit these values for your Nagarpalika
+   ========================================================= */
+const CONFIG = {
+  CORP_NAME: "Nagarpalika",          // e.g. "XYZ Municipal Council"
+  // Paste the Web App URL of the Google Apps Script (Code.gs) here.
+  // Leave empty to run in demo mode (browser storage only).
+  SCRIPT_URL: "",
+  RAKSHAK_DAL_PHONE: "112",          // Replace with the Rakshak Dal helpline number
+  WARDS: 20                          // Number of wards in the Nagarpalika
+};
+
+/* =========================================================
+   CATEGORIES (main tabs)
+   ========================================================= */
+const CATEGORIES = [
+  {id:"pothole",  icon:"🕳️", en:"Potholes", mr:"खड्डे",
+   subs:["Pothole on road","Broken road surface","Open manhole","Damaged footpath","Speed breaker issue"]},
+  {id:"garbage",  icon:"🗑️", en:"Garbage Collection", mr:"कचरा संकलन",
+   subs:["Garbage not collected","Overflowing bin","Garbage dumped in open","Dead animal","Drain/gutter blocked","Burning of garbage"]},
+  {id:"water",    icon:"🚰", en:"Water Supply", mr:"पाणीपुरवठा",
+   subs:["No water supply","Low pressure","Dirty/contaminated water","Pipeline leakage","Irregular timing","New connection request"]},
+  {id:"traffic",  icon:"🚦", en:"Traffic", mr:"वाहतूक",
+   subs:["Illegal parking","Signal not working","Encroachment on road","Traffic jam (regular)","Missing signboard","Street light not working"]},
+  {id:"women",    icon:"👩", en:"Women Safety", mr:"महिला सुरक्षा", rakshak:true,
+   subs:["Harassment / eve-teasing","Stalking","Unsafe / dark area","Threat or intimidation","Other safety concern"]},
+  {id:"quarrel",  icon:"⚠️", en:"Citizen Disputes", mr:"नागरिक वाद", rakshak:true,
+   subs:["Quarrel / fight in public","Neighbour dispute","Drunken nuisance","Group clash","Other disturbance"]},
+  {id:"noise",    icon:"🔊", en:"Noise Pollution", mr:"ध्वनी प्रदूषण",
+   subs:["Loudspeaker / DJ","Construction noise at night","Vehicle horn / silencer","Industrial noise","Other"]},
+  {id:"cert",     icon:"📜", en:"Certificates", mr:"प्रमाणपत्रे", cert:true,
+   subs:["Birth Certificate","Death Certificate","Residence Certificate","Marriage Registration","Property Tax No-Dues","Trade License","Building Permission / NOC"]},
+  {id:"mine",     icon:"📋", en:"My Complaints", mr:"माझ्या तक्रारी", list:true}
+];
+
+/* =========================================================
+   STATE
+   ========================================================= */
+let user = null;
+let current = CATEGORIES[0];
+let photo = null;      // {dataUrl, lat, lng, acc, time, place}
+
+/* =========================================================
+   INIT
+   ========================================================= */
+document.getElementById("corpName").textContent = CONFIG.CORP_NAME;
+document.getElementById("rakshakCall").href = "tel:" + CONFIG.RAKSHAK_DAL_PHONE;
+if (!CONFIG.SCRIPT_URL) document.getElementById("demoBanner").classList.remove("hidden");
+document.getElementById("rWard").innerHTML =
+  '<option value="">Select</option>' +
+  Array.from({length:CONFIG.WARDS},(_,i)=>`<option>Ward ${i+1}</option>`).join("");
+
+try { user = JSON.parse(sessionStorage.getItem("cs_user")); } catch(e){}
+if (user) enterApp();
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+const $ = id => document.getElementById(id);
+function msg(id, text, type="err"){ $(id).innerHTML = text ? `<div class="msg ${type}">${text}</div>` : ""; }
+function busy(btn, on, label){ btn.disabled = on; if(on){btn.dataset.l=btn.innerHTML;btn.innerHTML='<span class="spinner"></span> '+(label||"Please wait…");} else btn.innerHTML=btn.dataset.l; }
+async function sha256(s){
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");
+}
+function fmtDate(d){ return new Date(d).toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"}); }
+
+/* =========================================================
+   API – Google Apps Script backend (or local demo)
+   ========================================================= */
+async function api(action, data){
+  if (CONFIG.SCRIPT_URL){
+    const r = await fetch(CONFIG.SCRIPT_URL, {
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"}, // avoids CORS preflight
+      body: JSON.stringify({action, ...data})
+    });
+    return r.json();
+  }
+  return demoApi(action, data);
+}
+
+function demoApi(action, d){
+  const users = JSON.parse(localStorage.getItem("cs_users")||"{}");
+  const comps = JSON.parse(localStorage.getItem("cs_comps")||"[]");
+  if (action==="register"){
+    if (users[d.mobile]) return {ok:false, error:"This mobile number is already registered."};
+    users[d.mobile] = {...d, created:new Date().toISOString()};
+    localStorage.setItem("cs_users", JSON.stringify(users));
+    return {ok:true};
+  }
+  if (action==="login"){
+    const u = users[d.mobile];
+    if (!u || u.passwordHash!==d.passwordHash) return {ok:false, error:"Invalid mobile number or password."};
+    const {passwordHash, ...safe} = u; return {ok:true, user:safe};
+  }
+  if (action==="complaint"){
+    const {docxBase64, ...c} = d;
+    comps.push({...c, status:"Open"});
+    localStorage.setItem("cs_comps", JSON.stringify(comps));
+    return {ok:true, id:c.id};
+  }
+  if (action==="list") return {ok:true, complaints: comps.filter(c=>c.mobile===d.mobile).reverse()};
+  return {ok:false, error:"Unknown action"};
+}
+
+/* =========================================================
+   AUTH
+   ========================================================= */
+function showAuth(which){
+  $("loginForm").classList.toggle("hidden", which!=="login");
+  $("regForm").classList.toggle("hidden", which!=="register");
+  $("tLogin").classList.toggle("active", which==="login");
+  $("tReg").classList.toggle("active", which==="register");
+}
+
+async function doRegister(e){
+  e.preventDefault();
+  if ($("rPass").value !== $("rPass2").value) return msg("regMsg","Passwords do not match.");
+  const btn=$("regBtn"); busy(btn,true);
+  try{
+    const res = await api("register",{
+      name:$("rName").value.trim(), mobile:$("rMobile").value.trim(),
+      email:$("rEmail").value.trim(), ward:$("rWard").value,
+      address:$("rAddress").value.trim(), passwordHash: await sha256($("rPass").value)
+    });
+    if(res.ok){ msg("regMsg","Registration successful! Please login.","ok"); $("regForm").reset(); setTimeout(()=>showAuth("login"),1200); }
+    else msg("regMsg", res.error);
+  }catch(err){ msg("regMsg","Could not connect to server. "+err.message); }
+  busy(btn,false);
+}
+
+async function doLogin(e){
+  e.preventDefault();
+  const btn=$("loginBtn"); busy(btn,true);
+  try{
+    const res = await api("login",{ mobile:$("lMobile").value.trim(), passwordHash: await sha256($("lPass").value) });
+    if(res.ok){ user=res.user; sessionStorage.setItem("cs_user",JSON.stringify(user)); enterApp(); }
+    else msg("loginMsg", res.error);
+  }catch(err){ msg("loginMsg","Could not connect to server. "+err.message); }
+  busy(btn,false);
+}
+
+function logout(){ sessionStorage.removeItem("cs_user"); location.reload(); }
+
+function enterApp(){
+  $("authView").classList.add("hidden");
+  $("appView").classList.remove("hidden");
+  $("userBox").classList.remove("hidden");
+  $("userName").textContent = `${user.name} · ${user.ward||""}`;
+  renderTabs(); selectTab(CATEGORIES[0].id);
+}
+
+/* =========================================================
+   TABS & FORM
+   ========================================================= */
+function renderTabs(){
+  $("tabs").innerHTML = CATEGORIES.map(c=>`
+    <button class="tab ${c.rakshak?"rk":""}" id="tab-${c.id}" onclick="selectTab('${c.id}')">
+      <span class="ic">${c.icon}</span><span class="en">${c.en}</span><span class="mr">${c.mr}</span>
+    </button>`).join("");
+}
+
+function selectTab(id){
+  current = CATEGORIES.find(c=>c.id===id);
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  $("tab-"+id).classList.add("active");
+
+  if (current.list){ $("formCard").classList.add("hidden"); $("listCard").classList.remove("hidden"); loadList(); return; }
+  $("formCard").classList.remove("hidden"); $("listCard").classList.add("hidden");
+
+  $("formTitle").textContent = `${current.icon} ${current.en} / ${current.mr}`;
+  $("formSub").textContent = current.cert
+    ? "Apply for a certificate issued by the Nagarpalika. A geotagged photo of the applicant/premises is required."
+    : current.rakshak
+      ? "This complaint is forwarded to the Rakshak Dal (Nagarpalika security force)."
+      : "Report the issue with a geotagged photo so the field team can locate it.";
+  $("rakshakBox").classList.toggle("hidden", !current.rakshak);
+  $("certFields").classList.toggle("hidden", !current.cert);
+  $("priorityField").classList.toggle("hidden", !!current.cert);
+  $("subLabel").innerHTML = current.cert ? 'Certificate Type <span class="mr">/ प्रमाणपत्र प्रकार</span>' : 'Issue Type <span class="mr">/ समस्येचा प्रकार</span>';
+  $("cSub").innerHTML = '<option value="">Select</option>' + current.subs.map(s=>`<option>${s}</option>`).join("");
+  $("cApplicant").required = !!current.cert;
+  $("cApplicant").value = current.cert ? user.name : "";
+  $("cPriority").value = current.rakshak ? "High" : "Normal";
+  resetPhoto(); msg("submitMsg",""); msg("sosMsg","");
+}
+
+/* =========================================================
+   GEOLOCATION + GEOTAGGED PHOTO
+   ========================================================= */
+function getLocation(){
+  return new Promise((res,rej)=>{
+    if(!navigator.geolocation) return rej(new Error("Geolocation not supported on this device."));
+    navigator.geolocation.getCurrentPosition(
+      p=>res({lat:p.coords.latitude, lng:p.coords.longitude, acc:Math.round(p.coords.accuracy)}),
+      e=>rej(new Error(e.code===1?"Location permission denied. Please allow location access.":"Could not get location. Turn on GPS and try again.")),
+      {enableHighAccuracy:true, timeout:20000, maximumAge:0});
+  });
+}
+
+async function reverseGeocode(lat,lng){
+  try{
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=17`);
+    const j = await r.json(); return j.display_name || "";
+  }catch(e){ return ""; }
+}
+
+let locPromise = null;
+function takePhoto(){
+  // Start fetching GPS in parallel while the camera is open
+  locPromise = getLocation();
+  locPromise.catch(()=>{});
+  $("locStatus").className="loc"; $("locStatus").textContent="📍 Getting your location…";
+  $("cPhoto").click();
+}
+
+function resetPhoto(){
+  photo=null; $("cPhoto").value=""; $("photoPreview").classList.add("hidden");
+  $("locStatus").className="loc"; $("locStatus").textContent="Location will be captured when you take the photo.";
+}
+
+async function handlePhoto(e){
+  const file = e.target.files[0]; if(!file) return;
+  let loc;
+  try{ loc = await (locPromise || getLocation()); }
+  catch(err){ $("locStatus").className="loc"; $("locStatus").innerHTML=`<span style="color:var(--danger)">${err.message}</span>`; return; }
+
+  $("locStatus").textContent="🗺️ Stamping location on photo…";
+  const time = new Date();
+  const place = await reverseGeocode(loc.lat, loc.lng);
+  const dataUrl = await stampPhoto(file, loc, time, place);
+  photo = {dataUrl, ...loc, time:time.toISOString(), place};
+
+  $("photoPreview").src = dataUrl; $("photoPreview").classList.remove("hidden");
+  $("locStatus").className="loc good";
+  $("locStatus").innerHTML = `✅ ${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)} (±${loc.acc} m)<br>${place||""}`;
+}
+
+function stampPhoto(file, loc, time, place){
+  return new Promise((resolve,reject)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const max=1280, s=Math.min(1, max/Math.max(img.width,img.height));
+      const w=Math.round(img.width*s), h=Math.round(img.height*s);
+      const cv=document.createElement("canvas"); cv.width=w; cv.height=h;
+      const ctx=cv.getContext("2d"); ctx.drawImage(img,0,0,w,h);
+
+      const fs=Math.max(14,Math.round(w/45));
+      const lines=[
+        `${CONFIG.CORP_NAME} · Civic Sense AI`,
+        `Lat: ${loc.lat.toFixed(6)}  Long: ${loc.lng.toFixed(6)}  (±${loc.acc} m)`,
+        time.toLocaleString("en-IN"),
+      ];
+      if(place) lines.push(place.length>80 ? place.slice(0,80)+"…" : place);
+      const pad=fs*0.6, bandH=lines.length*fs*1.35+pad*2;
+      ctx.fillStyle="rgba(0,0,0,0.6)"; ctx.fillRect(0,h-bandH,w,bandH);
+      ctx.fillStyle="#fff"; ctx.font=`600 ${fs}px Mukta, sans-serif`; ctx.textBaseline="top";
+      lines.forEach((t,i)=>ctx.fillText(t,pad,h-bandH+pad+i*fs*1.35,w-pad*2));
+      resolve(cv.toDataURL("image/jpeg",0.85));
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror=()=>reject(new Error("Could not read the photo."));
+    img.src=URL.createObjectURL(file);
+  });
+}
+
+/* =========================================================
+   SOS (Rakshak Dal)
+   ========================================================= */
+async function sendSOS(){
+  msg("sosMsg","Getting location…","info");
+  try{
+    const loc = await getLocation();
+    const id = makeId("SOS");
+    await api("complaint",{
+      id, date:new Date().toISOString(), mobile:user.mobile, name:user.name, ward:user.ward,
+      category:current.en, subType:"SOS – Immediate help", description:"SOS raised from app",
+      landmark:"", lat:loc.lat, lng:loc.lng, accuracy:loc.acc, priority:"Emergency"
+    });
+    msg("sosMsg",`SOS sent to Rakshak Dal (ID ${id}). Location: ${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}. Please also call if you can.`,"ok");
+  }catch(err){ msg("sosMsg", err.message + " Please call Rakshak Dal directly."); }
+}
+
+/* =========================================================
+   SUBMIT COMPLAINT + WORD FILE
+   ========================================================= */
+function makeId(prefix){
+  const d=new Date(), p=n=>String(n).padStart(2,"0");
+  return `${prefix||"CS"}-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${Math.floor(1000+Math.random()*9000)}`;
+}
+
+async function submitComplaint(e){
+  e.preventDefault();
+  if(!photo) return msg("submitMsg","Please take a geotagged photo before submitting. / कृपया जिओटॅग फोटो काढा.");
+  const btn=$("submitBtn"); busy(btn,true,"Submitting…");
+
+  const c = {
+    id: makeId(current.cert ? "CERT" : "CMP"),
+    date: new Date().toISOString(),
+    mobile:user.mobile, name:user.name, ward:user.ward, address:user.address,
+    category: `${current.en} (${current.mr})`,
+    subType: $("cSub").value,
+    description: $("cDesc").value.trim(),
+    landmark: $("cLandmark").value.trim(),
+    applicant: current.cert ? $("cApplicant").value.trim() : "",
+    purpose: current.cert ? $("cPurpose").value.trim() : "",
+    priority: current.cert ? "Normal" : $("cPriority").value,
+    rakshak: !!current.rakshak,
+    lat: photo.lat, lng: photo.lng, accuracy: photo.acc, place: photo.place, photoTime: photo.time
+  };
+
+  try{
+    const blob = await buildDocx(c);
+    const docxBase64 = await blobToBase64(blob);
+    const res = await api("complaint",{...c, docxBase64});
+    if(!res.ok) throw new Error(res.error||"Server error");
+
+    // Download the Word file for the citizen
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`${c.id}.docx`; a.click();
+
+    msg("submitMsg",`✅ Complaint registered successfully.<br>Complaint ID: <b>${c.id}</b>${c.rakshak?"<br>Forwarded to Rakshak Dal.":""}<br>The Word file has been downloaded.`,"ok");
+    $("complaintForm").reset(); resetPhoto();
+    if(current.cert) $("cApplicant").value=user.name;
+  }catch(err){ msg("submitMsg","Submission failed: "+err.message); }
+  busy(btn,false);
+}
+
+function blobToBase64(blob){
+  return new Promise(r=>{ const fr=new FileReader(); fr.onload=()=>r(fr.result.split(",")[1]); fr.readAsDataURL(blob); });
+}
+function dataUrlToBytes(u){ const b=atob(u.split(",")[1]); const a=new Uint8Array(b.length); for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i); return a; }
+
+async function buildDocx(c){
+  const {Document,Packer,Paragraph,TextRun,ImageRun,Table,TableRow,TableCell,WidthType,AlignmentType,HeadingLevel,BorderStyle} = docx;
+
+  const cell=(t,bold,shade)=>new TableCell({
+    width:{size:bold?30:70,type:WidthType.PERCENTAGE},
+    shading: shade?{fill:"EAF3FA"}:undefined,
+    children:[new Paragraph({children:[new TextRun({text:String(t||"—"),bold})]})]
+  });
+  const rows = [
+    ["Complaint ID", c.id],
+    ["Date & Time", fmtDate(c.date)],
+    ["Citizen Name", c.name],
+    ["Mobile", c.mobile],
+    ["Ward", c.ward],
+    ["Residential Address", c.address],
+    ["Category", c.category],
+    [c.applicant?"Certificate Type":"Issue Type", c.subType],
+    ...(c.applicant ? [["Applicant Name",c.applicant],["Purpose",c.purpose]] : [["Urgency",c.priority]]),
+    ...(c.rakshak ? [["Assigned To","Rakshak Dal (Nagarpalika Security Force)"]] : []),
+    ["Landmark / Location", c.landmark],
+    ["GPS Coordinates", `${c.lat.toFixed(6)}, ${c.lng.toFixed(6)} (±${c.accuracy} m)`],
+    ["Detected Address", c.place],
+    ["Google Maps Link", `https://maps.google.com/?q=${c.lat},${c.lng}`],
+    ["Photo Taken At", fmtDate(c.photoTime)]
+  ].map(([k,v])=>new TableRow({children:[cell(k,true,true),cell(v)]}));
+
+  const img = new Image(); img.src = photo.dataUrl; await img.decode();
+  const pw = 450, ph = Math.round(pw*img.height/img.width);
+
+  const doc = new Document({
+    styles:{default:{document:{run:{font:"Mangal",size:22}}}},
+    sections:[{children:[
+      new Paragraph({alignment:AlignmentType.CENTER,heading:HeadingLevel.HEADING_1,children:[new TextRun({text:CONFIG.CORP_NAME,bold:true,size:36})]}),
+      new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:"Civic Sense AI – Citizen "+(c.applicant?"Certificate Application":"Complaint"),size:26})]}),
+      new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:200},children:[new TextRun({text:`Category: ${c.category}`,italics:true})]}),
+      new Table({width:{size:100,type:WidthType.PERCENTAGE},rows}),
+      new Paragraph({spacing:{before:300,after:100},children:[new TextRun({text:"Description",bold:true,size:26})]}),
+      new Paragraph({children:[new TextRun(c.description)]}),
+      new Paragraph({spacing:{before:300,after:100},children:[new TextRun({text:"Geotagged Photograph",bold:true,size:26})]}),
+      new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:dataUrlToBytes(photo.dataUrl),transformation:{width:pw,height:ph}})]}),
+      new Paragraph({spacing:{before:400},children:[new TextRun({text:"Declaration: I confirm that the information given above is true to the best of my knowledge.",size:20})]}),
+      new Paragraph({spacing:{before:400},alignment:AlignmentType.RIGHT,children:[new TextRun({text:`(${c.name})`,bold:true})]}),
+      new Paragraph({alignment:AlignmentType.RIGHT,children:[new TextRun({text:"Citizen",size:20})]})
+    ]}]
+  });
+  return Packer.toBlob(doc);
+}
+
+/* =========================================================
+   MY COMPLAINTS
+   ========================================================= */
+async function loadList(){
+  $("listBody").innerHTML='<tr><td colspan="5">Loading…</td></tr>'; msg("listMsg","");
+  try{
+    const res = await api("list",{mobile:user.mobile});
+    const list = res.complaints||[];
+    if(!list.length){ $("listBody").innerHTML='<tr><td colspan="5">No complaints yet.</td></tr>'; return; }
+    $("listBody").innerHTML = list.map(c=>{
+      const st=(c.status||"Open"), cls=/resolv|clos|issued/i.test(st)?"b-done":(c.priority==="Emergency"||c.priority==="High")?"b-high":"b-open";
+      return `<tr><td><b>${c.id}</b></td><td>${fmtDate(c.date)}</td><td>${c.category}</td><td>${c.subType}</td><td><span class="badge ${cls}">${st}</span></td></tr>`;
+    }).join("");
+  }catch(err){ $("listBody").innerHTML=""; msg("listMsg","Could not load complaints. "+err.message); }
+}
+</script>
+</body>
+</html>
